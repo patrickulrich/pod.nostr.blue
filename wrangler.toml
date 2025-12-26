@@ -1,0 +1,15 @@
+name = "podcastindex-proxy"
+main = "src/index.ts"
+compatibility_date = "2024-12-26"
+
+# Uncomment and configure for your custom domain
+# routes = [
+#   { pattern = "api.nostr.blue/*", zone_name = "nostr.blue" }
+# ]
+
+[vars]
+# Non-secret environment variables go here
+# PODCAST_INDEX_API_URL = "https://api.podcastindex.org/api/1.0"
+
+# Secrets are set via: wrangler secret put PODCAST_INDEX_KEY
+# wrangler secret put PODCAST_INDEX_SECRET
