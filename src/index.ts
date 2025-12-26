@@ -29,6 +29,21 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
+// Normalize URL for comparison - handles trailing &, query param order differences
+function normalizeUrlForComparison(urlStr: string): string {
+  try {
+    const url = new URL(urlStr);
+    // Sort query params for consistent comparison
+    const params = new URLSearchParams(url.search);
+    const sortedParams = new URLSearchParams([...params.entries()].sort());
+    // Reconstruct URL with sorted params (this also removes trailing &)
+    return `${url.origin}${url.pathname}${sortedParams.toString() ? '?' + sortedParams.toString() : ''}`;
+  } catch {
+    // If URL parsing fails, fall back to simple trailing & removal
+    return urlStr.replace(/[&?]$/, '');
+  }
+}
+
 // NIP-98 Auth validation
 async function validateNip98Auth(
   request: Request,
@@ -65,9 +80,11 @@ async function validateNip98Auth(
     return { valid: false, error: "Event timestamp expired (must be within 60 seconds)" };
   }
 
-  // Validate URL tag
+  // Validate URL tag (normalize both URLs to handle trailing & and other minor differences)
   const urlTag = event.tags.find((t) => t[0] === "u");
-  if (!urlTag || urlTag[1] !== request.url) {
+  const normalizedRequestUrl = normalizeUrlForComparison(request.url);
+  const normalizedEventUrl = urlTag ? normalizeUrlForComparison(urlTag[1]) : null;
+  if (!normalizedEventUrl || normalizedEventUrl !== normalizedRequestUrl) {
     return {
       valid: false,
       error: `URL mismatch. Expected: ${request.url}, got: ${urlTag?.[1] || "missing"}`,
